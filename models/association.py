@@ -8,7 +8,7 @@ base_dir = Path(__file__).resolve().parent.parent
 if str(base_dir) not in sys.path:
     sys.path.append(str(base_dir))
 
-from configs.config import THRESHOLDS
+from config import THRESHOLDS
 
 class RiderBikeAssociator:
     def __init__(self):
@@ -38,7 +38,7 @@ class RiderBikeAssociator:
     def _get_centroid(self, box):
         return ((box[0] + box[2]) / 2, (box[1] + box[3]) / 2)
 
-    def associate(self, bike_boxes, rider_boxes, rider_keypoints):
+    def associate(self, bike_boxes, bike_confs, rider_boxes, rider_keypoints):
         """
         Maps bounding boxes of persons (riders) to the bounding boxes of motorcycles.
         Returns a list of dictionaries mapping 'bike' to its respective 'riders'.
@@ -122,9 +122,16 @@ class RiderBikeAssociator:
                         associations[nearest_bike_idx]['rider_kpts'].append(r_kpts)
 
         # FINAL INFERENCE: Guarantee minimum 1 rider
-        for assoc in associations:
+        for i, assoc in enumerate(associations):
             if len(assoc['riders']) == 0:
-                assoc['inferred_rider'] = True # Assumed ghost rider for violation triggers
+                b_box = assoc['bike']
+                bike_area = (b_box[2] - b_box[0]) * (b_box[3] - b_box[1])
+                b_conf = bike_confs[i]
+                
+                if b_conf > 0.6 and bike_area > 20000:
+                    assoc['inferred_rider'] = True # Assumed ghost rider for violation triggers
+                else:
+                    assoc['inferred_rider'] = False
             else:
                 assoc['inferred_rider'] = False
 

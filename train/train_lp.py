@@ -57,8 +57,8 @@ def train_lp_model():
     device = 0 if torch.cuda.is_available() else 'cpu'
     print(f"  Training on: {device if device != 0 else 'GPU (CUDA)'}")
 
-    # Start with base model from weights folder
-    model = YOLO(MODEL_PATHS["yolov8_bike"])
+    # Start with YOLOv8m (medium) — as specified for LP
+    model = YOLO(MODEL_PATHS["yolov8_medium"])
 
     # Cumulative progress tracking
     current_stage_offset = 0
@@ -119,8 +119,8 @@ def train_lp_model():
             epochs=5,
             imgsz=imgsz,
             freeze=10, 
-            lr0=0.001,
-            lrf=10.0,
+            lr0=1e-3,
+            lrf=0.01,
             patience=patience,
             batch=16,
             workers=8,
@@ -133,9 +133,7 @@ def train_lp_model():
         
         last_weight_path1 = Path(base_dir / "outputs" / "training" / "lp" / "stage1_frozen" / "weights" / "last.pt")
 
-        # =========================================================
-        # STAGE 2: Unfrozen Cosine Annealing (Epochs 6-40)
-        # =========================================================
+    
         #stage 2
         print("\n--- STAGE 2: MAIN TRAINING ---")
         current_stage_offset = 5

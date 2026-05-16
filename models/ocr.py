@@ -1,7 +1,6 @@
 
 # Enhances blurry/tilted license plate images using preprocessing and super-resolution.
 # Reads and postprocesses Indian license plate text using OCR with confidence-based fallback.
-
 import cv2
 import numpy as np
 import re

@@ -17,6 +17,7 @@ PATHS = {
 MODEL_PATHS = {
     "yolov8_bike": "yolov8s.pt",
     "yolov8_pose": "yolov8s-pose.pt",
+    "yolov8_medium": "yolov8m.pt",
     "helmet_model": os.path.join(PATHS["weights"], "helmet_best.pt"),
     "lp_model": os.path.join(PATHS["weights"], "lp_best.pt")
 }
@@ -52,7 +53,7 @@ TRAINING = {
     },
     "license_plate": {
         "epochs": 60,
-        "resolution": 960, # Images resized to 960×960.
+        "resolution": 640, # Aligned with inference preprocessor target (was 960, caused train/infer mismatch).
         "patience": 12
     }
 }
@@ -80,9 +81,3 @@ LP_DATASET = {
     "nc": 1,
     "names": ["license_plate"]
 }
-INDIAN_STATE_CODES = [
-    "AN", "AP", "AR", "AS", "BR", "CH", "CG", "DD", "DN", "DL", "GA", "GJ",
-    "HR", "HP", "JK", "JH", "KA", "KL", "LA", "LD", "MP", "MH", "MN", "ML",
-    "MZ", "NL", "OD", "OR", "PY", "PB", "RJ", "SK", "TN", "TS", "TR", "UP",
-    "UK", "UA", "WB"
-]

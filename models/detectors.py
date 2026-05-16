@@ -13,20 +13,19 @@ if str(base_dir) not in sys.path:
 from config import THRESHOLDS, MODEL_PATHS
 
 class BikeDetector:
-        # detects bikes : Returns boxes and confidence for all the bikes detected
+    # detects bikes : Returns boxes and confidence for all the bikes detected
     def __init__(self, device=None):
         self.device = device if device else ('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"Loading Bike Detector (YOLOv8s) on {self.device}...")
         
-        # This automatically downloads the COCO weights if missing
         # Load the base model from our weights folder
-        self.model = YOLO(MODEL_PATHS["yolov8_bike"]) # Loads pretrained YOLOv8 small model.
-        self.primary_conf = THRESHOLDS["bike_conf_primary"] #Confidence threshold,prediction must be at least 50% confident.
-        self.fallback_conf = THRESHOLDS["bike_conf_fallback"]  # Lower threshold used if no bikes found.
-        self.nms_iou = THRESHOLDS["nms_iou"] # Controls Non-Max Suppression.Used to remove duplicate boxes.
+        self.model = YOLO(MODEL_PATHS["yolov8_bike"]) 
+        self.primary_conf = THRESHOLDS["bike_conf_primary"]
+        self.fallback_conf = THRESHOLDS["bike_conf_fallback"]
+        self.nms_iou = THRESHOLDS["nms_iou"]
         
+        # COCO class 3: motorcycle
         self.target_classes = [3]
-        #  COCO class ID 3 = motorcycle.So YOLO detects ONLY motorcycles
 
     def detect(self, img):
         """Returns bounding boxes and confidences for motorcycles."""
@@ -38,14 +37,11 @@ class BikeDetector:
             results = self.model(img, conf=self.fallback_conf, iou=self.nms_iou, classes=self.target_classes, device=self.device, verbose=False)
             
         boxes = results[0].boxes.xyxy.cpu().numpy()
-        # Gets boxes in format:[x1, y1, x2, y2]
         confs = results[0].boxes.conf.cpu().numpy()
         return boxes, confs
 
 
 class PoseDetector:
-    # This detects:people,skeleton keypoints->Returns boxes(for riders), confs, keypoints(YOLOv8 pose predicts 17 COCO joints)
-
     def __init__(self, device=None):
         self.device = device if device else ('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"Loading Pose Detector (YOLOv8s-pose) on {self.device}...")
@@ -55,7 +51,7 @@ class PoseDetector:
         self.nms_iou = THRESHOLDS["nms_iou"]
         self.kp_conf_threshold = THRESHOLDS["keypoint_conf"]
         
-        # target class:COCO class 0->person
+        # COCO class 0: person
         self.target_classes = [0]
 
     def detect(self, img):
@@ -88,3 +84,40 @@ class PoseDetector:
         y2 = min(img_shape[0], y2 + margin * h)
         
         return [int(x1), int(y1), int(x2), int(y2)]
+
+class HelmetDetector:
+    def __init__(self, model_path=None, device=None):
+        import os
+        self.device = device if device else ('cuda' if torch.cuda.is_available() else 'cpu')
+        path = model_path if model_path else MODEL_PATHS["helmet_model"]
+        
+        if os.path.exists(path):
+            print(f"Loading Helmet Detector on {self.device}...")
+            self.model = YOLO(path)
+        else:
+            print(f"Helmet model not found at {path}")
+            self.model = None
+
+    def detect(self, img):
+        if self.model is None:
+            return []
+        return self.model(img, device=self.device, verbose=False)
+
+
+class LicensePlateDetector:
+    def __init__(self, model_path=None, device=None):
+        import os
+        self.device = device if device else ('cuda' if torch.cuda.is_available() else 'cpu')
+        path = model_path if model_path else MODEL_PATHS["lp_model"]
+        
+        if os.path.exists(path):
+            print(f"Loading LP Detector on {self.device}...")
+            self.model = YOLO(path)
+        else:
+            print(f"LP model not found at {path}")
+            self.model = None
+
+    def detect(self, img):
+        if self.model is None:
+            return []
+        return self.model(img, device=self.device, verbose=False)

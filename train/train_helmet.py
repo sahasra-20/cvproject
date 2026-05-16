@@ -63,7 +63,7 @@ def train_helmet_model():
     device = 0 if torch.cuda.is_available() else 'cpu'
     print(f"  Training on: {device if device != 0 else 'GPU (CUDA)'}")
     
-    # Start with the standard small YOLOv8 model from weights/
+    # Start with YOLOv8s (small) — consistent with bike/pose detectors
     model = YOLO(MODEL_PATHS["yolov8_bike"])
 
     # Tracking cumulative progress across stages
@@ -130,8 +130,8 @@ def train_helmet_model():
             epochs=5,
             imgsz=imgsz,
             freeze=10, 
-            lr0=0.001,
-            lrf=10.0,
+            lr0=1e-3,
+            lrf=0.01,
             patience=patience,
             batch=16,
             workers=8,
