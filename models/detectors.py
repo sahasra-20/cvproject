@@ -19,7 +19,8 @@ class BikeDetector:
         print(f"Loading Bike Detector (YOLOv8s) on {self.device}...")
         
         # This automatically downloads the COCO weights if missing
-        self.model = YOLO("yolov8s.pt") # Loads pretrained YOLOv8 small model.
+        # Load the base model from our weights folder
+        self.model = YOLO(MODEL_PATHS["yolov8_bike"]) # Loads pretrained YOLOv8 small model.
         self.primary_conf = THRESHOLDS["bike_conf_primary"] #Confidence threshold,prediction must be at least 50% confident.
         self.fallback_conf = THRESHOLDS["bike_conf_fallback"]  # Lower threshold used if no bikes found.
         self.nms_iou = THRESHOLDS["nms_iou"] # Controls Non-Max Suppression.Used to remove duplicate boxes.
@@ -49,7 +50,7 @@ class PoseDetector:
         self.device = device if device else ('cuda' if torch.cuda.is_available() else 'cpu')
         print(f"Loading Pose Detector (YOLOv8s-pose) on {self.device}...")
         
-        self.model = YOLO("yolov8s-pose.pt")
+        self.model = YOLO(MODEL_PATHS["yolov8_pose"])
         self.conf = THRESHOLDS["bike_conf_fallback"] # Lower threshold to find partially occluded riders
         self.nms_iou = THRESHOLDS["nms_iou"]
         self.kp_conf_threshold = THRESHOLDS["keypoint_conf"]
