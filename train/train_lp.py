@@ -68,34 +68,36 @@ def train_lp_model():
         global best_epoch, best_val_loss
         ep = trainer.epoch + 1 + current_stage_offset
         
-        # Extract training losses
-        t_losses = trainer.label_loss_items(trainer.tloss)
-        t_box, t_cls = t_losses[0], t_losses[1]
-        
-        # Validation metrics
-        v_box, v_cls, map50 = 0.0, 0.0, 0.0
-        if hasattr(trainer, 'validator') and trainer.validator:
-            v_box = trainer.validator.loss[0]
-            v_cls = trainer.validator.loss[1]
-            map50 = trainer.validator.results_dict.get('metrics/mAP50(B)', 0.0)
+        try:
+            # Safely extract metrics directly from trainer.metrics if available
+            t_box, t_cls = 0.0, 0.0
+            if hasattr(trainer, 'tloss') and len(trainer.tloss) >= 2:
+                t_box = float(trainer.tloss[0])
+                t_cls = float(trainer.tloss[1])
+                
+            v_box, v_cls, map50 = 0.0, 0.0, 0.0
+            if hasattr(trainer, 'validator') and trainer.validator:
+                if hasattr(trainer.validator, 'loss') and len(trainer.validator.loss) >= 2:
+                    v_box = float(trainer.validator.loss[0])
+                    v_cls = float(trainer.validator.loss[1])
+                map50 = trainer.validator.results_dict.get('metrics/mAP50(B)', 0.0)
+                
+            lr = trainer.optimizer.param_groups[0]['lr'] if hasattr(trainer, 'optimizer') else 0.0
             
-        # Get learning rate
-        lr = trainer.optimizer.param_groups[1]['lr']
-        
-        # Check for best run
-        current_val_total = v_box + v_cls
-        if current_val_total < best_val_loss:
-            best_val_loss = current_val_total
-            best_epoch = ep
-            marker = "  <-- NEW BEST"
-            best_pt = Path(trainer.save_dir) / "weights" / "best.pt"
-            if best_pt.exists():
-                shutil.copy(str(best_pt), str(final_dest))
-        else:
+            # Check for best run
+            current_val_total = v_box + v_cls
             marker = ""
-            
-        print(f"  Epoch {ep:>3}/{epochs} | train_box_loss: {t_box:.3f} | train_cls_loss: {t_cls:.3f} | map_50: {map50:.3f} | val_box_loss: {v_box:.3f} | val_cls_loss: {v_cls:.3f} | learning_rate: {lr:.5f}{marker}")
-
+            if current_val_total < best_val_loss and current_val_total > 0:
+                best_val_loss = current_val_total
+                best_epoch = ep
+                marker = "  <-- NEW BEST"
+                best_pt = Path(trainer.save_dir) / "weights" / "best.pt"
+                if best_pt.exists():
+                    shutil.copy(str(best_pt), str(final_dest))
+                    
+            print(f"  Epoch {ep:>3}/{epochs} | train_box_loss: {t_box:.3f} | train_cls_loss: {t_cls:.3f} | map_50: {map50:.3f} | val_box_loss: {v_box:.3f} | val_cls_loss: {v_cls:.3f} | learning_rate: {lr:.5f}{marker}")
+        except Exception as e:
+            print(f"  Epoch {ep:>3}/{epochs} | Metrics extraction error: {e}")
 
     try:
         model.add_callback('on_train_epoch_end', on_epoch_end)
