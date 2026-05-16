@@ -1,0 +1,22 @@
+# Core AI Libraries
+torch
+torchvision
+ultralytics
+
+
+# OCR Engines
+paddlepaddle
+paddleocr
+
+# Data Processing & Math
+opencv-python-headless
+numpy
+scikit-learn
+Pillow
+
+
+# Downloaders & Utilities
+matplotlib
+psutil
+pyyaml
+tqdm
