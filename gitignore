@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.env
+outputs/
+clean_dataset/
+weights/
+*.pt
+*.onnx
